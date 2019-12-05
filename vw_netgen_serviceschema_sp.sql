@@ -2,10 +2,7 @@ CREATE PROCEDURE vw_netgen_serviceschema_sp
 @Guid	engg_name,
 @EcrNo	engg_name
 AS
-BEGIN
-
-		
-
+BEGIN	
 		--update method's loopcausingsegment
 		update a
 		set  a.loopcausingsegment = d.segmentname 
@@ -136,7 +133,20 @@ BEGIN
                        From    #fw_des_integ_serv_map imap (nolock)
                        where   di.servicename          = imap.callingservicename
                        and     di.segmentname          = imap.callingsegment
-                       and     di.dataitemname         = imap.callingdataitem)
+                       and     di.dataitemname         = imap.callingdataitem
+					   union
+					   Select  '*'
+                       From    #fw_des_publish_api_response_serv_map api_response (nolock)
+                       where   di.servicename          = api_response.ServiceName
+                       and     di.segmentname          = api_response.segmentname
+                       and     di.dataitemname         = api_response.dataitemname
+					   union
+					   Select  '*'
+                       From    #fw_des_publish_api_request_serv_map api_request (nolock)
+                       where   di.servicename          = api_request.ServiceName
+                       and     di.segmentname          = api_request.segmentname
+                       and     di.dataitemname         = api_request.dataitemname
+					   )
        order by servicename, segmentname, name
        
 		--Process Section
@@ -146,7 +156,8 @@ BEGIN
 				ISNULL(cast(sequenceno as varchar),'')		as seqno,
 				ISNULL(controlexpression,'')				as controlexpression,
 				ISNULL(cast(processingtype as varchar),'')	as loopingstyle,
-				servicename								    as servicename
+				servicename								    as servicename,
+				IsUniversalPersonalization					as IsUniversalPersonalization
 		FROM	#fw_des_processsection(Nolock)
 				
 		
@@ -166,7 +177,13 @@ BEGIN
 				ISNULL(cast(br.systemgenerated as varchar),'')		  as systemgenerated,
 				ISNULL(cast(sp.sperrorprotocol as varchar),'')		  as sperrorprotocol,
 				ISNULL(ps.loopcausingsegment,'')					  as loopcausingsegment,
-				ISNULL(br.method_exec_cont,'')						  as method_exec_cont --TECH-XXXX
+				ISNULL(br.method_exec_cont,'')						  as method_exec_cont, --TECH-XXXX
+				ISNULL(ps.specid,'')									as specid,
+				ISNULL(ps.specname,'')									as specname,
+				ISNULL(ps.specversion,'')								as specversion,
+				ISNULL(ps.path,'')										as path,
+				ISNULL(ps.operationid,'')								as operationid,
+				ISNULL(ps.operationverb,'')								as operationverb
 		FROM	#fw_des_processsection_br_is ps(Nolock)
 		LEFT JOIN				
 				#fw_des_businessrule br(Nolock)
@@ -273,8 +290,138 @@ BEGIN
 						AND     sv.DataItemName =   di.DataitemName
 						)
 		AND		di.DataitemName NOT IN ('ModeFlag')
-		ORDER BY di.servicename,Seg.InstanceFlag, di.segmentname	
+		ORDER BY di.servicename,Seg.InstanceFlag, di.segmentname
+
+		-- API Request
+		SELECT	ServiceName			'servicename',			
+				SectionName			'sectionname',			
+				cast(SequenceNo as varchar)			'sequenceno',			
+				SpecID				'specid',			
+				SpecName			'specname',
+				Version				'version',				
+				Path				'path',					
+				OperationVerb		'operationverb',		
+				MediaType			'mediatype',		
+				ParentSchemaName	'parentschemaname',
+				SchemaName			'schemaname',				
+				SchemaCategory		'schemacategory',			
+				SegmentName			'segmentname',		
+				DataItemName		'dataitemname',	
+				NodeID				'nodeid',	
+				ParentNodeID		'parentnodeid',			
+				Identifier			'identifier',				
+				Type				'type',				
+				DisplayName			'displayname'		
+			FROM	#fw_des_publish_api_request_serv_map (NOLOCK)
+			WHERE	Type NOT IN ('integer','string','number','date')
+			UNION
+					SELECT	ServiceName			'servicename',			
+				SectionName			'sectionname',			
+				cast(SequenceNo as varchar)			'sequenceno',			
+				SpecID				'specid',			
+				SpecName			'specname',
+				Version				'version',				
+				Path				'path',					
+				OperationVerb		'operationverb',		
+				MediaType			'mediatype',		
+				ParentSchemaName	'parentschemaname',
+				SchemaName			'schemaname',				
+				SchemaCategory		'schemacategory',			
+				SegmentName			'segmentname',		
+				DataItemName		'dataitemname',	
+				NodeID				'nodeid',	
+				ParentNodeID		'parentnodeid',			
+				Identifier			'identifier',				
+				Type				'type',				
+				DisplayName			'displayname'		
+			FROM	#fw_des_publish_api_request_serv_map (NOLOCK)
+			WHERE	Type IN ('integer','string','number','date')
+			AND		ISNULL(DataItemName,'') <> ''
+
+		-- API Response
+		SELECT	ServiceName				'servicename',				
+				SectionName				'sectionname',			
+				cast(SequenceNo as varchar)				'sequenceno',			
+				SpecID					'specid',			
+				SpecName 				'specname', 
+				Version					'version',					
+				Path					'path',					
+				OperationVerb			'operationverb',		
+				MediaType				'mediatype',		
+				ResponseCode 			'responsecode', 
+				ParentSchemaName		'parentschemaname',			
+				SchemaName				'schemaname',				
+				SchemaCategory			'schemacategory',		
+				SegmentName				'segmentname',	
+				DataItemName 			'dataitemname', 
+				NodeID					'nodeid',						
+				ParentNodeID			'parentnodeid',			
+				Identifier				'identifier',			
+				Type					'type',			
+				DisplayName				'displayname'	
+		FROM	#fw_des_publish_api_response_serv_map (NOLOCK)
+		WHERE	Type NOT IN ('integer','string','number','date')
+		UNION
+				SELECT	ServiceName			'servicename',				
+				SectionName				'sectionname',			
+				cast(SequenceNo as varchar)				'sequenceno',			
+				SpecID					'specid',			
+				SpecName 				'specname', 
+				Version					'version',					
+				Path					'path',					
+				OperationVerb			'operationverb',		
+				MediaType				'mediatype',		
+				ResponseCode 			'responsecode', 
+				ParentSchemaName		'parentschemaname',			
+				SchemaName				'schemaname',				
+				SchemaCategory			'schemacategory',		
+				SegmentName				'segmentname',	
+				DataItemName 			'dataitemname', 
+				NodeID					'nodeid',						
+				ParentNodeID			'parentnodeid',			
+				Identifier				'identifier',			
+				Type					'type',			
+				DisplayName				'displayname'	
+		FROM	#fw_des_publish_api_response_serv_map (NOLOCK)
+		WHERE	Type IN ('integer','string','number','date')
+		AND		ISNULL(DataItemName,'') <> ''
+
+	-- API Path Parameter
+	SELECT	ServiceName			'servicename',					
+			SectionName			'sectionname',			
+			cast(SequenceNo as varchar)			'sequenceno',			
+			SpecID				'specid',			
+			SpecName 			'specname', 
+			Version				'version',						
+			Path				'path',					
+			ParameterName		'parametername',		
+			SegmentName			'segmentname',	
+			DataItemName		'dataitemname',
+			[In]				'in'
+	FROM	#fw_des_publish_api_pathparameter_serv_map (NOLOCK)
+
+	-- API Path Operation Parameter
+	SELECT	ServiceName			'servicename',					
+			SectionName			'sectionname',			
+			cast(SequenceNo as varchar)			'sequenceno',			
+			SpecID				'specid',			
+			SpecName 			'specname', 
+			Version				'version',						
+			Path				'path',					
+			ParameterName		'parametername',		
+			SegmentName			'segmentname',	
+			DataItemName		'dataitemname',
+			OperationVerb		'operationverb',
+			[In]				'in'
+			
+	FROM	#fw_des_publish_api_pathoperationparameter_serv_map (NOLOCK)
+	
 END
+
+
+
+
+
 
 
 
