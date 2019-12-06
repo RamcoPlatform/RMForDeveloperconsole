@@ -115,8 +115,8 @@ CREATE procedure vw_netgen_populate_temptable_sp
 	from de_fw_req_publish_ilbo_linkuse_vw_fn (@customername, @projectname, @ecrno) 
 
 
-    insert into #fw_des_ilbo_services (ilbocode, isprepopulate, servicename, UpdUser, Updtime) 
-    select ilbocode, isprepopulate, servicename , host_name(), getdate() 
+    insert into #fw_des_ilbo_services (ilbocode, isprepopulate, servicename, UpdUser, Updtime,	IsUniversalPersonalization) 
+    select ilbocode, isprepopulate, servicename , host_name(), getdate() ,	IsUniversalPersonalization		
 	from de_fw_des_publish_ilbo_services_vw_fn (@customername, @projectname, @ecrno) 
 
 
@@ -271,19 +271,23 @@ CREATE procedure vw_netgen_populate_temptable_sp
 			LOWER(LTRIM(RTRIM(integsegment))),LOWER(LTRIM(RTRIM(integservicename))), LOWER(LTRIM(RTRIM(sectionname))), sequenceno 
 	from de_fw_des_publish_integ_serv_map_vw_fn (@customername, @projectname, @ecrno) 
 
-    
-    insert into #fw_des_processsection (  controlexpression, processingtype, sectionname, sectiontype, sequenceno, servicename )
-    select  case controlexpression when '' then NUll else controlexpression end, processingtype,  LOWER(LTRIM(RTRIM(sectionname))),
-			sectiontype, sequenceno, LOWER(LTRIM(RTRIM(servicename))) 
-	from de_fw_des_publish_processsection_vw_fn (@customername, @projectname, @ecrno) 
+	 insert into #fw_task_service_map (activity_name,service_name,task_name,ui_name ) 
+    select activity_name,service_name,task_name,ui_name 
+	from de_published_task_service_map_fn (@customername, @projectname, @ecrno)
 
+	
+    insert into #fw_des_processsection (  controlexpression, processingtype, sectionname, sectiontype, sequenceno, servicename)
+    select  case controlexpression when '' then NUll else controlexpression end, processingtype,  LOWER(LTRIM(RTRIM(sectionname))),
+			sectiontype, sequenceno, LOWER(LTRIM(RTRIM(servicename)))
+	from de_fw_des_publish_processsection_vw_fn (@customername, @projectname, @ecrno) 
 
     insert  into #fw_des_processsection_br_is ( connectivityflag, controlexpression, executionflag, integservicename, isbr,  methodid,
 											    sectionname, sequenceno, servicename,Method_Ext, methodid_ref, methodname_ref, sequenceno_ref,
-												sectionname_ref, ps_sequenceno_ref)
+												sectionname_ref, ps_sequenceno_ref,SpecID,SpecName,SpecVersion,Path,OperationID,OperationVerb)
     select  connectivityflag, controlexpression, executionflag, LOWER(LTRIM(RTRIM(integservicename))), isbr,  methodid, 
 			LOWER(LTRIM(RTRIM(sectionname))), sequenceno, LOWER(LTRIM(RTRIM(servicename))), '' as Method_Ext, '' as methodid_ref,
-			'' as methodname_ref, '' as sequenceno_ref,'' as sectionname_ref, '' as ps_sequenceno_ref
+			'' as methodname_ref, '' as sequenceno_ref,'' as sectionname_ref, '' as ps_sequenceno_ref ,
+			SpecID,SpecName,SpecVersion,Path,OperationID,OperationVerb
 	from de_fw_des_publish_processsection_br_is_vw_fn (@customername, @projectname, @ecrno)  
 	
 
@@ -440,10 +444,29 @@ CREATE procedure vw_netgen_populate_temptable_sp
 	exec De_il_PublishRVWObjects_upd @componentname
 
 	exec de_il_fw_des_iu_save_service_ecr_update @componentname,1,'PUBLISHED',@m_errorid Output
+	
+    EXEC de_up_create_virtualmethod  @customername,@projectname,@componentname,@ecrno	
+
+	UPDATE #fw_des_processsection set IsUniversalPersonalization = 
+		case when exists (	select	'X'
+							from	de_published_up_defaulting_dtl dtl (nolock),
+									#fw_task_service_map ser (nolock)
+							WHERE	dtl.activity_name		= ser.activity_name COLLATE DATABASE_DEFAULT
+							AND		dtl.ui_name				= ser.ui_name COLLATE DATABASE_DEFAULT
+							AND		dtl.task_name			= ser.task_name COLLATE DATABASE_DEFAULT
+							AND		dtl.customer_name		= @customername
+							AND		dtl.project_name		= @projectname
+							AND		dtl.ecrno				= @ecrno) 
+							AND		sectionname like '%_up' then 'Y'				
+		ELSE 'N'
+		END 
+
+	EXEC vwnetgen_Api_Tree_Form @customername,@projectname,@componentname,@ecrno	
 
  Set nocount off
 
  end  
+
 
 
 

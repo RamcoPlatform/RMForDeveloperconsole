@@ -1,13 +1,4 @@
-/************************************************************************************
-procedure name and id   vw_netgen_activityschema_sp
-name of the author      Kiruthika R
-date created            
-query file name         vw_netgen_activityschema_sp.sql
-modifications history 
- Modified By: Jeya Latha K		Modified On: 04-Oct-2019	
- rsgrid added by Jeya for supporting Gantt & Calendar in controlid & View name result set
-************************************************************************************/
-Create PROC  vw_netgen_activityschema_sp @customer_name ENGG_NAME, 
+CREATE PROC  vw_netgen_activityschema_sp @customer_name ENGG_NAME, 
                                        @project_name   ENGG_NAME, 
                                        @ecrno          ENGG_NAME, 
 									   @component_name ENGG_NAME,
@@ -258,6 +249,21 @@ AS
         AND ilbo.ilbocode	   = temp.ilbocode 
 
 
+	 /*Universal Personalization*/	 	 
+	 --select ilboservices.*
+	 --from	#fw_req_ilbo					ilbo(nolock),
+		--	#fw_des_ilbo_services			ilboservices(nolock)
+	 --where	ilbo.ilbocode					=	ilboservices.ilbocode
+	 --and	ilboservices.IsUniversalPersonalization	=	'y'
+
+	 Update ilbo
+	 set	ilbo.HasUniversalPersonalization = 'y'
+	 from	#fw_req_ilbo					ilbo(nolock),
+			#fw_des_ilbo_services			ilboservices(nolock)
+	 where	ilbo.ilbocode					=	ilboservices.ilbocode
+	 and	ilboservices.IsUniversalPersonalization	=	'y'
+
+			
       /*Zoom ILBO Cursor*/ 
       DECLARE ilbocurs insensitive CURSOR 
 	  FOR 
@@ -288,7 +294,7 @@ AS
                    #fw_req_ilbo					 i (nolock), 
                    #fw_req_ilbo_control_property cp (nolock), 
                    #fw_req_ilbo_data_use		 datause (nolock), 
-                   #fw_req_task					 task (nolock), 
+           #fw_req_task					 task (nolock), 
                    #fw_req_ilbo					 zoom (nolock) 
             WHERE  i.ilbocode			  = @ilbocode 
             AND	   ic.ilbocode			  = i.ilbocode 
@@ -356,7 +362,8 @@ AS
 			 isnull(hascontrolextension,'') as hascontrolextension,
 			 isnull(hasdynamiclink,'') as hasdynamiclink,
 			 isnull(hasqlik,'') as hasqlik,
-			 isnull(sensitive,'') as hassensitivedata 
+			 isnull(sensitive,'') as hassensitivedata ,
+			 isnull(HasUniversalPersonalization,'') as hasuniversalpersonalization
       FROM   #fw_req_ilbo          i(nolock), 
              #fw_req_activity_ilbo ai(nolock), 
              #ilbolist             temp(nolock) 
@@ -390,7 +397,8 @@ AS
 	  isnull(hascontrolextension,'') as hascontrolextension,
 	  isnull(hasdynamiclink,'') as hasdynamiclink,
 	  isnull(hasqlik,'') as hasqlik ,
-	  isnull(sensitive,'') as hassensitivedata 
+	  isnull(sensitive,'') as hassensitivedata,
+	  isnull(HasUniversalPersonalization,'') as hasuniversalpersonalization 
       FROM #fw_req_ilbo			 i(nolock), 
            #fw_req_activity_ilbo ai(nolock), 
            #ilbolist			 temp(nolock), 
@@ -540,9 +548,11 @@ AS
 		clearkey_pattern		= Isnull(clearkey_pattern, ''), 
 		setkey_pattern			= Isnull(setkey_pattern, ''),
 		primarycontrol			= CASE WHEN t.tasktype in ('help', 'link' ) THEN act.primary_control_bts ELSE '' END,
-		ordering				= CASE WHEN t.tasktype in ('help', 'link' ) THEN 2 ELSE 1 END 
+		ordering				= CASE WHEN t.tasktype in ('help', 'link' ) THEN 2 ELSE 1 END,
+		IsUniversalPersonalization = ilser.IsUniversalPersonalization
 					  
       FROM   #fw_des_service					ds  (nolock), 
+			 #fw_des_ilbo_services				ilser(nolock),
              #fw_req_task						t   (nolock), 
              #fw_des_ilbo_service_view_datamap  isvd(nolock), 
              #ilbolist							temp(nolock) , 
@@ -550,12 +560,14 @@ AS
 			 #de_published_action			  act (nolock) 
 	  ON     ait.ilbocode = act.ui_name 
       AND	 ait.taskname = act.task_name
-      WHERE isvd.ilbocode = temp.ilbocode 
+	  
+      WHERE ds.servicename = ilser.servicename
+		AND isvd.ilbocode = temp.ilbocode 
         AND isvd.servicename = ds.servicename 
         AND isvd.taskname = t.taskname 
         AND isvd.ilbocode = ait.ilbocode 
         AND isvd.taskname = ait.taskname 
-        --AND t.tasktype not in ('help', 'link') 
+  --AND t.tasktype not in ('help', 'link') 
         AND NOT EXISTS (SELECT 'x' 
                         FROM   #fw_req_activity_ilbo_task_extension_map aitem (nolock) 
                         WHERE  aitem.ilbocode = ait.ilbocode 
@@ -566,7 +578,7 @@ AS
       servicename		   = ds.servicename , 
       servicetype		   = ds.servicetype, 
       taskname			   = isvd.taskname, 
-      taskdesc			   = t.taskdesc, 
+      taskdesc			 = t.taskdesc, 
       tasktype			   = t.tasktype, 
       servicecomponentname = ds.componentname, 
       sessionvariable	   = aitem.sessionvariable, 
@@ -577,14 +589,17 @@ AS
       clearkey_pattern	   = Isnull(clearkey_pattern, ''), 
       setkey_pattern	   = Isnull(setkey_pattern, '') ,
 	  primarycontrol	   = '',
-	  ordering            =1
-    FROM   #fw_des_service							ds   (nolock), 
+	  ordering            =1,
+	  IsUniversalPersonalization = ilser.IsUniversalPersonalization
+    FROM	 #fw_des_service							ds   (nolock), 
+			 #fw_des_ilbo_services						ilser(nolock),
              #fw_req_task								t    (nolock), 
              #fw_des_ilbo_service_view_datamap			isvd (nolock), 
              #fw_req_activity_ilbo_task					ait  (nolock), 
              #fw_req_activity_ilbo_task_extension_map aitem  (nolock), 
              #ilbolist temp(nolock) 
       WHERE isvd.ilbocode = temp.ilbocode 
+		AND	ds.servicename = ilser.servicename
         AND isvd.servicename = ds.servicename 
         AND isvd.taskname = t.taskname 
         AND isvd.ilbocode = ait.ilbocode 
@@ -609,7 +624,8 @@ AS
 		clearkey_pattern	= '', 
 		setkey_pattern		= ''  ,
 		primarycontrol		= LOWER(LTRIM(RTRIM(act.primary_control_bts))),
-		ordering            =2
+		ordering            =2,
+		IsUniversalPersonalization = 'n'
       FROM   #fw_req_task				t (nolock), 
              #ilbolist					temp(nolock),
 			 #fw_req_activity_ilbo_task ait (nolock) left outer join
@@ -655,7 +671,7 @@ AS
         AND a.taskname		= sp.taskname 
         AND a.target_spname = sp.target_spname 
       WHERE temp.ilbocode	= sp.ui_name 
-        AND b.btsynonym		= a.mapped_control 
+       AND b.btsynonym		= a.mapped_control 
         AND c.btname		= b.btname 
 
       /*Tree Details*/ 
@@ -728,7 +744,7 @@ AS
              #fw_req_activity_ilbo		ai (nolock), 
              #fw_req_ilbo_control		c (nolock), 
              #ilbolist				   temp(nolock) 
-      WHERE ai.ilbocode   = temp.ilbocode 
+WHERE ai.ilbocode   = temp.ilbocode 
 		AND ilp.ilbocode  = ai.ilbocode 
 		AND ilp.ilbocode  = c.ilbocode 
 		AND ilp.controlid = c.controlid 
@@ -804,13 +820,13 @@ AS
              dataitemname	 = LOWER(LTRIM(RTRIM(dataitemname))), 
              controlid		 = LOWER(LTRIM(RTRIM(Isnull(controlid, controlvariablename)))), 
              viewname		 = LOWER(LTRIM(RTRIM(Isnull(viewname, controlvariablename)))), 
-             retrievemultiple= retrievemultiple, 
+    retrievemultiple= retrievemultiple, 
              flowattribute   = CASE flowtype 
 							   WHEN 0 THEN 1 
 							   WHEN 1 THEN 0 
 							   ELSE 2 
 							   END , 
-             linkid			= linkid 
+   linkid			= linkid 
       FROM   #fw_req_ilbo_data_use    (nolock), 
              #ilbolist			  temp(nolock) 
       WHERE  parentilbocode = temp.ilbocode 
@@ -1142,6 +1158,12 @@ AS
 			
       SET nocount OFF 
   END 
+
+
+
+
+
+
 
 
 
