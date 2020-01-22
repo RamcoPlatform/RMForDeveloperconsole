@@ -138,7 +138,8 @@ custombr,    alllanguage,   deploydeliverables,  platform,    appliation_rm_type
 multittx,    repprintdate,   iEDK,     statejs,    ucd,     ezreport,    CEXml,
 InTD,     onlyxml,    reportaspx,    webasync,    errorlookup,   taskpane,    suffixcolon,
 gridfilter,  ezlookup,labelselect,ReleaseVersion, inlinetab, split,ellipses,reportxml,generatedatejs,
-typebro,ipad5,desktopdlv,DeviceConfigPath,iPhone,ellipsesleft, ezeewizard, layoutcontrols, rtstate,SecondaryLink,depscript_with_actname,extjs6,defaultasnull,customer_name,project_name,ecr_no,component_name,codegenclient,starttime,[status],mhub2,previousgenerationpath) 
+typebro,ipad5,desktopdlv,DeviceConfigPath,iPhone,ellipsesleft, ezeewizard, layoutcontrols, rtstate,SecondaryLink,depscript_with_actname,extjs6,defaultasnull,customer_name,project_name,ecr_no,component_name,codegenclient,starttime,[status],mhub2,previousge
+nerationpath) 
 values (@guid,     @chart,     @state,     @pivot,     @ddt,     @cvs,     @excelreport,
 @logicalextn,   @errorxml,    @instconfig,   @imptoolkitdel,   @spstub,    @refdocs,    @quicklink,
 @datascript,   @edksscript,   @controlextn,   @customurl,    @datadriventask,  @seperrordll,   @app,
@@ -152,7 +153,8 @@ values (@guid,     @chart,     @state,     @pivot,     @ddt,     @cvs,     @exce
 @multittx,    @repprintdate,   @iEDK,     @statejs,    @ucd,     @ezreport,    @CEXml,
 @InTD,     @onlyxml,    @reportaspx,   @webasync,    @errorlookup,   @taskpane,    @suffixcolon,
 @gridfilter,   @ezlookup, @labelselect,@ReleaseVersion, @inlinetab, @split,@ellipses,@reportxml,@generatedatejs,
-@typebro,@ipad5,@desktopdlv,@DeviceConfigPath,@iPhone,@ellipsesleft, @ezeewizard, @layoutcontrols, @RTState, @SecondaryLink,@depscript_with_actname,@extjs6,@defaultasnull,@customer,@project,@ecrno,@component,@codegenclient,GETDATE(),'inprogress',@mhub2,@previousgenerationpath)  
+@typebro,@ipad5,@desktopdlv,@DeviceConfigPath,@iPhone,@ellipsesleft, @ezeewizard, @layoutcontrols, @RTState, @SecondaryLink,@depscript_with_actname,@extjs6,@defaultasnull,@customer,@project,@ecrno,@component,@codegenclient,GETDATE(),'inprogress',@mhub2,@p
+reviousgenerationpath)  
 end
 else
 begin
@@ -276,6 +278,3 @@ previousgenerationpath = @previousgenerationpath
 where guid     = @guid
 end
 end
-
-
-

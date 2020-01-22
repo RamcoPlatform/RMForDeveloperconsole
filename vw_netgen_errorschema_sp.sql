@@ -103,7 +103,7 @@ BEGIN
 	WHERE 	ph.Placeholdername = beph.Placeholdername 
 	AND 	ph.Errorid		   = beph.Errorid 
 	AND 	beph.Methodid      = bre.Methodid 
-	AND 	beph.Errorid     = bre.Errorid 
+	AND 	beph.Errorid    = bre.Errorid 
 	AND 	di.Methodid        = beph.methodid 
 	AND 	di.ParameterName   = beph.ParameterName 
 	AND 	ps.sectionname     = di.sectionname 
@@ -112,9 +112,3 @@ BEGIN
 	AND 	dipl.langid        = @langid 
 	ORDER 	BY		 4,1,2
 END
-
-
-
-
-
-

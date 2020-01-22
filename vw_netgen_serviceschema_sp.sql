@@ -310,7 +310,8 @@ BEGIN
 				NodeID				'nodeid',	
 				ParentNodeID		'parentnodeid',			
 				Identifier			'identifier',				
-				Type				'type',				
+				Type				'type',			
+				SchemaType				'schematype',		
 				DisplayName			'displayname'		
 			FROM	#fw_des_publish_api_request_serv_map (NOLOCK)
 			WHERE	Type NOT IN ('integer','string','number','date')
@@ -332,7 +333,8 @@ BEGIN
 				NodeID				'nodeid',	
 				ParentNodeID		'parentnodeid',			
 				Identifier			'identifier',				
-				Type				'type',				
+				Type				'type',			
+				SchemaType				'schematype',			
 				DisplayName			'displayname'		
 			FROM	#fw_des_publish_api_request_serv_map (NOLOCK)
 			WHERE	Type IN ('integer','string','number','date')
@@ -358,6 +360,7 @@ BEGIN
 				ParentNodeID			'parentnodeid',			
 				Identifier				'identifier',			
 				Type					'type',			
+				SchemaType				'schematype',		
 				DisplayName				'displayname'	
 		FROM	#fw_des_publish_api_response_serv_map (NOLOCK)
 		WHERE	Type NOT IN ('integer','string','number','date')
@@ -381,6 +384,7 @@ BEGIN
 				ParentNodeID			'parentnodeid',			
 				Identifier				'identifier',			
 				Type					'type',			
+				SchemaType				'schematype',	
 				DisplayName				'displayname'	
 		FROM	#fw_des_publish_api_response_serv_map (NOLOCK)
 		WHERE	Type IN ('integer','string','number','date')
@@ -415,15 +419,4 @@ BEGIN
 			[In]				'in'
 			
 	FROM	#fw_des_publish_api_pathoperationparameter_serv_map (NOLOCK)
-	
 END
-
-
-
-
-
-
-
-
-
-

@@ -5,7 +5,7 @@ date created
 query file name         vw_netgen_optionxml_sp.sql
 modifications history 
 ************************************************************************************/
-alter procedure vw_netgen_optionxml_sp
+CREATE procedure vw_netgen_optionxml_sp
 @guid    engg_guid,
 @ecrno    engg_name
 as
@@ -75,6 +75,7 @@ declare
 @mhub2 engg_flag,
 @allstyle engg_flag
 
+set arithabort on
 
 --code commented and modified by 11536 to identify glance ui or not 
 
@@ -263,7 +264,7 @@ else
 				@platform = isnull(platform,'Dotnet'),
 				@appliation_rm_type = lower(isnull(appliation_rm_type, 'sql')) ,
 				@generationpath  =  isnull(generationpath, 'c:\temp'),
-				@multittx   =  isnull(multittx, 'n'),
+				@multittx   = isnull(multittx, 'n'),
 				@CEXml    = isnull(CEXml, 'n'),
 				@InTD    =  isnull(intd, 'n'),  
 				@reportaspx   =  isnull(reportaspx, 'Crystal'),  
@@ -445,4 +446,5 @@ select @optionxml = '<codegeneration>'+isnull(@model,'')+isnull(@languages,'')+l
 select cast(@optionxml as xml) 'gen_xml'
 
 set nocount off
+set arithabort off
 end

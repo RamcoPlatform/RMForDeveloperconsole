@@ -1,9 +1,3 @@
-/*
-Begin tran
-EXEC vwnetgen_Api_Tree_Form 'Ramco','Runtime','UserMgmt','Usr_ECR_00006'
-rollback
-*/
-
 CREATE PROCEDURE vwnetgen_Api_Tree_Form
 @CustomerName		ENGG_NAME,
 @ProjectName		ENGG_NAME,
@@ -15,7 +9,7 @@ BEGIN
 
 	IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE ID = OBJECT_ID('fw_des_api_tree_form'))
 	BEGIN
-		CREATE TABLE [fw_des_api_tree_form] (
+		CREATE TABLE [fw_des_api_tree_form] (  
 			[CustomerName]			ENGG_NAME			NOT NULL,
 			[ProjectName]			ENGG_NAME			NOT NULL,
 			[DocNo]					ENGG_NAME			NOT NULL,
@@ -38,6 +32,7 @@ BEGIN
 			[DataItemName]			ENGG_NAME			NULL,
 			[Identifier]			ENGG_TYPE			NULL,
 			[Type]					ENGG_SCHEMA_NAME	NULL,
+			[SchemaType]			ENGG_SCHEMA_NAME	NULL,
 			[IsPrimitiveType]		ENGG_SCHEMA_NAME	NULL,
 			[Enum]					ENGG_SCHEMA_NAME	NULL,
 			[DisplayName]			ENGG_NVARCHAR_MAX	NULL,
@@ -227,7 +222,7 @@ BEGIN
 							OperatiONVerb,				MediaType,					ApiType,				ParentSchemaName,		
 							SchemaName,					SegmentName,				DataItemName,
 							Identifier,					Type,						IsPrimitiveType,		enum,
-							NodeID,						ParentNodeID,				DisplayName	)
+							NodeID,						ParentNodeID,				DisplayName,			SchemaType	)
 					SELECT	
 							CustomerName,				ProjectName,				DocNO,					CompONentName,
 							@tmp_ServiceName,			@tmp_SectiONName,			@tmp_SequenceNO,		Level,
@@ -235,7 +230,7 @@ BEGIN
 							@tmp_OperatiONVerb,			@tmp_mediaType,				@tmp_type,				ParentSchemaName,
 							schemaname,					'',							'',
 							identifier,					type,						IsPrimitiveType,		Enum,
-							NodeID,						pnodeid,					DisplayText	
+							NodeID,						pnodeid,					DisplayText,			SchemaType	
 					FROM	cte_pop_obj_1_1 (NOLOCK)	
 					UNION
 					SELECT	
@@ -245,7 +240,7 @@ BEGIN
 							@tmp_OperatiONVerb,			@tmp_mediaType,				@tmp_type,				ParentSchemaName,
 							schemaname,					'',							'',
 							identifier,					type,						IsPrimitiveType,		Enum,
-							NodeID,						pnodeid,					DisplayText	
+							NodeID,						pnodeid,					DisplayText,			SchemaType	
 					FROM	cte_pop_obj_2_2 (NOLOCK)	
 					UNION
 					SELECT	
@@ -255,7 +250,7 @@ BEGIN
 							@tmp_OperatiONVerb,			@tmp_mediaType,				@tmp_type,				ParentSchemaName,
 							schemaname,					'',							'',
 							identifier,					type,						IsPrimitiveType,		Enum,
-							NodeID,						pnodeid,					DisplayText	
+							NodeID,						pnodeid,					DisplayText,			SchemaType	
 					FROM	cte_pop_obj_3_3 (NOLOCK)						
 
 
@@ -360,12 +355,12 @@ BEGIN
 							(	ServiceName,			SectionName,			SequenceNo,			SpecID,			SpecName,
 								Version,				Path,					OperationVerb,		MediaType,		ParentSchemaName,
 								SchemaName,				SchemaCategory,			SegmentName,		DataItemName,	NodeID,	
-								ParentNodeID,			Identifier,				Type,				DisplayName		)
+								ParentNodeID,			Identifier,				Type,				DisplayName,	SchemaType		)
 					SELECT		
 								ServiceName,			SectionName,			SequenceNo,			SpecID,			SpecName,
 								Version,				Path,					OperationVerb,		MediaType,		ParentSchemaName,
 								SchemaName,				SchemaCategory,			SegmentName,		DataItemName,	NodeID,	
-								ParentNodeID,			Identifier,				Type,				DisplayName	
+								ParentNodeID,			Identifier,				Type,				DisplayName,	SchemaType	
 						FROM	fw_des_api_tree_form (NOLOCK)
 						WHERE	apitype				=	'request'
 						ORDER BY ServiceName,SectionName,SequenceNo,SpecID,Version,Path,OperationVerb,MediaType,level
@@ -374,12 +369,14 @@ BEGIN
 							(	ServiceName,				SectionName,			SequenceNo,			SpecID,			SpecName, 
 								Version,					Path,					OperationVerb,		MediaType,		ResponseCode, 
 								ParentSchemaName,			SchemaName,				SchemaCategory,		SegmentName,	DataItemName, 
-								NodeID,						ParentNodeID,			Identifier,			Type,			DisplayName		)
+								NodeID,						ParentNodeID,			Identifier,			Type,			DisplayName,
+								SchemaType		)
 						SELECT	
 								ServiceName,				SectionName,			SequenceNo,			SpecID,			SpecName, 
 								Version,					Path,					OperationVerb,		MediaType,		ResponseCode, 
 								ParentSchemaName,			SchemaName,				SchemaCategory,		SegmentName,	DataItemName, 
-								NodeID,						ParentNodeID,			Identifier,			Type,			DisplayName	
+								NodeID,						ParentNodeID,			Identifier,			Type,			DisplayName,
+								SchemaType	
 						FROM	fw_des_api_tree_form (NOLOCK)
 						WHERE	apitype				=	'response'
 						ORDER BY ServiceName,SectionName,SequenceNo,SpecID,Version,Path,OperationVerb,MediaType,level	
@@ -414,11 +411,12 @@ BEGIN
 						and		a.OperationVerb	=	b.OperationVerb
 						and		a.ParameterName	=	b.ParameterName
 						ORDER BY a.componentname, a.servicename, a.SectionName, a.SequenceNo
-
 	DELETE FROM fw_des_api_tree_form
 
 	SET NOCOUNT OFF
 END
+
+
 
 
 

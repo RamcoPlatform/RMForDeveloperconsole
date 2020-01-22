@@ -671,7 +671,7 @@ AS
         AND a.taskname		= sp.taskname 
         AND a.target_spname = sp.target_spname 
       WHERE temp.ilbocode	= sp.ui_name 
-       AND b.btsynonym		= a.mapped_control 
+      AND b.btsynonym		= a.mapped_control 
         AND c.btname		= b.btname 
 
       /*Tree Details*/ 
@@ -1157,21 +1157,4 @@ WHERE ai.ilbocode   = temp.ilbocode
 
 			
       SET nocount OFF 
-  END 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  END

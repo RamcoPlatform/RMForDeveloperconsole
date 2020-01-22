@@ -466,11 +466,3 @@ CREATE procedure vw_netgen_populate_temptable_sp
  Set nocount off
 
  end  
-
-
-
-
-
-
-
-
